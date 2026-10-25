@@ -1,0 +1,5 @@
+{
+  "name": "로컬 박스 치수 계산기",
+  "description": "API 키 없이 브라우저에서 단독으로 동작하는 박스 치수 계산기입니다.",
+  "requestFramePermissions": []
+}
