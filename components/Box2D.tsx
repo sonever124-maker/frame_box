@@ -41,6 +41,36 @@ const Box2D: React.FC<Box2DProps> = ({ calc }) => {
       </h3>
 
       <div className="flex flex-col gap-8">
+        {/* Total Summary Section - 한 단(Row) 좌우 배치 레이아웃, 배경색 삭제 */}
+        <div className="py-6 px-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
+          <div className="grid grid-cols-2 divide-x divide-gray-100">
+            {/* Width Summary (Left) */}
+            <div className="flex flex-col items-center justify-center py-2 px-4">
+              <p className="text-[11px] text-gray-500 font-bold mb-1 uppercase tracking-wider">전체 가로 (W_Total)</p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-4xl font-black text-blue-600">{totalX}</p>
+                <span className="text-sm font-bold text-gray-400">mm</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 font-medium">수식: {tPrime} + {wPrime} + {tPrime}</p>
+            </div>
+
+            {/* Height Summary (Right) */}
+            <div className="flex flex-col items-center justify-center py-2 px-4">
+              <p className="text-[11px] text-gray-500 font-bold mb-1 uppercase tracking-wider">전체 세로 (H_Total)</p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-4xl font-black text-indigo-600">{totalY}</p>
+                <span className="text-sm font-bold text-gray-400">mm</span>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                 <p className="text-lg font-black text-indigo-500">({hPrime}, {totalY - hPrime})</p>
+                 <span className="text-[10px] text-gray-400 font-medium leading-tight">
+                   H' /<br />나머지
+                 </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* SVG Diagram Section */}
         <div className="w-full flex justify-center bg-gray-50 p-6 rounded-2xl border border-dashed border-gray-300 overflow-hidden shadow-inner">
           <svg 
@@ -92,37 +122,8 @@ const Box2D: React.FC<Box2DProps> = ({ calc }) => {
           </svg>
         </div>
 
-        {/* Total Summary Section - 한 단(Row) 좌우 배치 레이아웃, 배경색 삭제 */}
+        {/* Notice Section */}
         <div className="space-y-4">
-          <div className="py-6 px-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
-            <div className="grid grid-cols-2 divide-x divide-gray-100">
-              {/* Width Summary (Left) */}
-              <div className="flex flex-col items-center justify-center py-2 px-4">
-                <p className="text-[11px] text-gray-500 font-bold mb-1 uppercase tracking-wider">전체 가로 (W_Total)</p>
-                <div className="flex items-baseline gap-1">
-                  <p className="text-4xl font-black text-blue-600">{totalX}</p>
-                  <span className="text-sm font-bold text-gray-400">mm</span>
-                </div>
-                <p className="text-[10px] text-gray-400 mt-2 font-medium">수식: {tPrime} + {wPrime} + {tPrime}</p>
-              </div>
-
-              {/* Height Summary (Right) */}
-              <div className="flex flex-col items-center justify-center py-2 px-4">
-                <p className="text-[11px] text-gray-500 font-bold mb-1 uppercase tracking-wider">전체 세로 (H_Total)</p>
-                <div className="flex items-baseline gap-1">
-                  <p className="text-4xl font-black text-indigo-600">{totalY}</p>
-                  <span className="text-sm font-bold text-gray-400">mm</span>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                   <p className="text-lg font-black text-indigo-500">({hPrime}, {totalY - hPrime})</p>
-                   <span className="text-[10px] text-gray-400 font-medium leading-tight">
-                     H' /<br />나머지
-                   </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
             <p className="text-yellow-800 text-[11px] flex items-center gap-2 font-bold">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
