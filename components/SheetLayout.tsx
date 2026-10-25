@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { CalculatedDimensions, CuttingLayout, SheetDimensions } from '../types';
+import { CalculatedDimensions, CuttingLayout, PlacedPiece, SheetDimensions } from '../types';
 import { findLayouts } from '../cutting';
 
 interface SheetLayoutProps {
@@ -13,6 +13,13 @@ interface SheetSvgProps {
   sheet: SheetDimensions;
   detailed?: boolean;
 }
+
+// 조각 종류별 색상 (정방향 / 90° 회전 / 2분할 H1 / 2분할 H나머지)
+const pieceColor = (p: PlacedPiece) => {
+  if (p.part === 'H1') return { fill: '#d1fae5', stroke: '#059669' };
+  if (p.part === 'rest') return { fill: '#fef3c7', stroke: '#d97706' };
+  return p.rotated ? { fill: '#e0e7ff', stroke: '#4f46e5' } : { fill: '#dbeafe', stroke: '#2563eb' };
+};
 
 // 원장 위에 전개도 배치를 그립니다. detailed가 아니면 비교용 썸네일로 그립니다.
 const SheetSvg: React.FC<SheetSvgProps> = ({ layout, sheet, detailed = false }) => {
@@ -43,14 +50,14 @@ const SheetSvg: React.FC<SheetSvgProps> = ({ layout, sheet, detailed = false }) 
         <g key={i}>
           <rect
             x={p.x} y={p.y} width={p.w} height={p.h}
-            fill={p.rotated ? '#e0e7ff' : '#dbeafe'}
-            stroke={p.rotated ? '#4f46e5' : '#2563eb'}
+            fill={pieceColor(p).fill}
+            stroke={pieceColor(p).stroke}
             strokeWidth={unit * 0.12}
           />
           {detailed && (
             <>
               <text x={p.x + p.w / 2} y={p.y + p.h / 2} textAnchor="middle" dominantBaseline="middle" fill="#1e3a8a" style={labelStyle}>
-                #{i + 1}
+                {p.part ? (p.part === 'H1' ? 'H1' : 'H나머지') : `#${i + 1}`}
               </text>
               <text x={p.x + p.w / 2} y={p.y + p.h / 2 + unit * 1.8} textAnchor="middle" dominantBaseline="middle" fill="#6b7280" style={dimStyle}>
                 {p.w}×{p.h}{p.rotated ? ' ↻' : ''}
@@ -82,11 +89,13 @@ const SheetSvg: React.FC<SheetSvgProps> = ({ layout, sheet, detailed = false }) 
 };
 
 const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
-  const { totalX, totalY } = calc;
+  const { totalX, totalY, hPrime } = calc;
   const { candidates, best } = useMemo(
-    () => findLayouts(sheet.width, sheet.height, totalX, totalY),
-    [sheet.width, sheet.height, totalX, totalY]
+    () => findLayouts(sheet.width, sheet.height, totalX, totalY, hPrime),
+    [sheet.width, sheet.height, totalX, totalY, hPrime]
   );
+  const isSplit = best.label === '2분할';
+  const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-2 sm:grid-cols-4'][candidates.length - 1];
 
   return (
     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
@@ -106,7 +115,7 @@ const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
       ) : (
         <div className="flex flex-col gap-6">
           {/* 배치 방식 비교 */}
-          <div className={`grid gap-4 ${candidates.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid gap-4 ${gridCols}`}>
             {candidates.map(c => {
               const isBest = c === best;
               return (
@@ -125,6 +134,9 @@ const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
                     <span className={`text-2xl font-black ${isBest ? 'text-blue-600' : 'text-gray-700'}`}>{c.count}</span>
                     <span className="text-sm font-bold text-gray-400"> 개</span>
                   </p>
+                  {c.label === '2분할' && (
+                    <p className="text-center text-[10px] text-gray-400 font-medium">H1 + H나머지 짝 기준</p>
+                  )}
                   <p className="text-center text-[11px] text-gray-400 font-medium">사용률 {(c.usage * 100).toFixed(1)}%</p>
                 </div>
               );
@@ -140,10 +152,16 @@ const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
 
           <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
             <p className="text-blue-800 text-sm font-bold">
-              추천: {best.label} 배치 · 원장 1장당 {best.count}개 · 사용률 {(best.usage * 100).toFixed(1)}% · 남는 부분 {(100 - best.usage * 100).toFixed(1)}%
+              추천: {best.label} 배치 · 원장 1장당 박스 {best.count}개분 · 사용률 {(best.usage * 100).toFixed(1)}% · 남는 부분 {(100 - best.usage * 100).toFixed(1)}%
             </p>
+            {isSplit && (
+              <p className="text-blue-800 text-[11px] mt-1 font-bold leading-relaxed">
+                전개도를 통째로 재단하면 최대 {Math.max(...candidates.filter(c => c !== best).map(c => c.count))}개지만,
+                ({totalX} × {hPrime}) H1 조각과 ({totalX} × {totalY - hPrime}) H나머지 조각 2개로 나눠 재단하면 {best.count}개가 나옵니다.
+              </p>
+            )}
             <p className="text-blue-600 text-[11px] mt-1 leading-relaxed">
-              파란색은 정방향, 보라색(↻)은 90° 돌려 놓은 전개도이고, 빗금은 남는 부분입니다. 칼날 두께 등 재단 여유는 포함되지 않았습니다.
+              파란색은 정방향, 보라색(↻)은 90° 돌려 놓은 전개도, 초록색은 H1 조각, 주황색은 H나머지 조각이고, 빗금은 남는 부분입니다. 칼날 두께 등 재단 여유는 포함되지 않았습니다.
             </p>
           </div>
         </div>
