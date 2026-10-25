@@ -1,20 +1,18 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 박스 치수 계산기
 
-# Run and deploy your AI Studio app
+액자 박스의 두께(T)·가로(W)·세로(H)를 입력하면 보정 치수와 전개도를 실시간으로 그려 주는 웹 앱입니다.
+외부 API 없이 브라우저에서만 동작합니다.
 
-This contains everything you need to run your app locally.
+## 계산식
 
-View your app in AI Studio: https://ai.studio/apps/drive/1LDPMHaBtpTagqQPqrmyDx2ZFR4BMycwT
+- T' = T + 5, W' = W + 10, H' = H + 10
+- 전체 가로 = T' + W' + T'
+- 전체 세로 = 40(날개) + T' + H' + T' + H'
 
-## Run Locally
+## 로컬 실행
 
-**Prerequisites:**  Node.js
+**필요:** Node.js
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. 의존성 설치: `npm install`
+2. 개발 서버 실행: `npm run dev` (http://localhost:3000)
+3. 배포용 빌드: `npm run build`

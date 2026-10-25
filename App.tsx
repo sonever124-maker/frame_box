@@ -85,7 +85,7 @@ const App: React.FC = () => {
             <section className="animate-in fade-in slide-in-from-top-4 duration-500">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
-                박스 시각화 (+10mm 보정)
+                박스 시각화 (보정 치수)
               </h2>
               <BoxIllustration calc={calc} />
             </section>

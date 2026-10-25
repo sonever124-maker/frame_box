@@ -129,7 +129,7 @@ const Box2D: React.FC<Box2DProps> = ({ calc }) => {
               안내사항
             </p>
             <p className="text-yellow-700 text-[10px] mt-1 leading-relaxed">
-              도면의 점선은 접는 선(Creg line), 실선은 절단 선(Cut line)입니다. 위 수치는 가공 시의 보정 여유분(+10mm)이 포함된 최종 생산용 데이터입니다.
+              도면의 점선은 접는 선(Crease line), 실선은 절단 선(Cut line)입니다. 위 수치는 가공 시의 보정 여유분(두께 +5mm, 가로·세로 +10mm)이 포함된 최종 생산용 데이터입니다.
             </p>
           </div>
         </div>
