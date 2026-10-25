@@ -1,9 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
-import { BoxDimensions, CalculatedDimensions } from './types';
+import { BoxDimensions, CalculatedDimensions, SheetDimensions } from './types';
 import InputGroup from './components/InputGroup';
 import Box2D from './components/Box2D';
 import BoxIllustration from './components/BoxIllustration';
+import SheetLayout from './components/SheetLayout';
+
+// 박스 원장 기본값 (mm)
+const DEFAULT_SHEET: SheetDimensions = { thickness: 2, width: 1250, height: 1600 };
 
 /**
  * @description Gemini API나 외부 서버 통신 없이 
@@ -16,8 +20,14 @@ const App: React.FC = () => {
     height: 0,
   });
 
+  const [sheet, setSheet] = useState<SheetDimensions>(DEFAULT_SHEET);
+
   const updateDim = (key: keyof BoxDimensions, value: number) => {
     setDims(prev => ({ ...prev, [key]: value }));
+  };
+
+  const updateSheet = (key: keyof SheetDimensions, value: number) => {
+    setSheet(prev => ({ ...prev, [key]: value }));
   };
 
   // 모든 계산은 여기서 실시간으로 처리됩니다 (No API required)
@@ -33,6 +43,7 @@ const App: React.FC = () => {
   }, [dims]);
 
   const isValid = dims.thickness > 0 && dims.width > 0 && dims.height > 0;
+  const isSheetValid = sheet.width > 0 && sheet.height > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-12">
@@ -47,7 +58,10 @@ const App: React.FC = () => {
             <h1 className="text-xl font-black tracking-tight text-gray-900">박스 치수 계산기</h1>
           </div>
           <button 
-            onClick={() => setDims({ thickness: 0, width: 0, height: 0 })}
+            onClick={() => {
+              setDims({ thickness: 0, width: 0, height: 0 });
+              setSheet(DEFAULT_SHEET);
+            }}
             className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest"
           >
             초기화
@@ -80,6 +94,30 @@ const App: React.FC = () => {
           </div>
         </section>
 
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+            박스 원장 (mm)
+          </h2>
+          <div className="grid grid-cols-3 gap-4 sm:gap-8">
+            <InputGroup 
+              label="원장 두께" 
+              value={sheet.thickness} 
+              onChange={(val) => updateSheet('thickness', val)} 
+            />
+            <InputGroup 
+              label="원장 가로" 
+              value={sheet.width} 
+              onChange={(val) => updateSheet('width', val)} 
+            />
+            <InputGroup 
+              label="원장 세로" 
+              value={sheet.height} 
+              onChange={(val) => updateSheet('height', val)} 
+            />
+          </div>
+        </section>
+
         {isValid ? (
           <div className="space-y-8">
             <section className="animate-in fade-in slide-in-from-top-4 duration-500">
@@ -93,6 +131,12 @@ const App: React.FC = () => {
             <section className="animate-in slide-in-from-bottom-8 duration-700">
               <Box2D calc={calc} />
             </section>
+
+            {isSheetValid && (
+              <section>
+                <SheetLayout calc={calc} sheet={sheet} />
+              </section>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-gray-400 bg-white rounded-3xl border-2 border-dashed border-gray-200 shadow-inner">
