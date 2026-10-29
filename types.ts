@@ -17,6 +17,8 @@ export interface SheetDimensions {
   thickness: number;
   width: number;
   height: number;
+  // 재단 톱날 두께 (조각 사이에 들어가는 재단 손실)
+  kerf: number;
 }
 
 export interface PlacedPiece {

@@ -109,10 +109,9 @@ const packSplitStrips = (strips: Strip[], pieceW: number, h1: number, rest: numb
  * @description 전개도를 H1 조각과 H나머지 조각 2개로 나눠 재단하는 배치를 찾습니다.
  * 원장을 세로 띠(정방향)와 가로 띠(90° 회전) 영역으로 한 번 나누는 모든 경우를 비교합니다.
  */
-const findSplitLayout = (sheetW: number, sheetH: number, pieceW: number, pieceH: number, h1: number) => {
-  const rest = pieceH - h1;
+const findSplitLayout = (sheetW: number, sheetH: number, pieceW: number, h1: number, rest: number) => {
   if (h1 <= 0 || rest <= 0) return null;
-  const maxSets = Math.floor((sheetW * sheetH) / (pieceW * pieceH));
+  const maxSets = Math.floor((sheetW * sheetH) / (pieceW * (h1 + rest)));
   const cols = Math.floor(sheetW / pieceW);
   const rows = Math.floor(sheetH / pieceW);
   let best: PlacedPiece[] | null = null;
@@ -141,13 +140,8 @@ const findSplitLayout = (sheetW: number, sheetH: number, pieceW: number, pieceH:
   return best as PlacedPiece[] | null;
 };
 
-/**
- * @description 원장(sheetW x sheetH)에서 전개도(pieceW x pieceH)를 최대한 많이 뽑는 배치를 찾습니다.
- * 정방향 / 90° 회전 / 두 방향을 한 번의 직선 재단으로 나눠 섞는 혼합 배치를 비교합니다.
- * h1을 주면 전개도를 (가로 x H1)과 (가로 x H나머지) 2개로 나눠 재단하는 배치도 비교하고,
- * 통째로 재단할 때보다 박스가 더 많이 나올 때만 추천합니다.
- */
-export const findLayouts = (sheetW: number, sheetH: number, pieceW: number, pieceH: number, h1?: number) => {
+// 톱날 두께만큼 키운 계산용 크기로 배치를 찾습니다 (findLayouts 내부용)
+const findRawLayouts = (sheetW: number, sheetH: number, pieceW: number, pieceH: number, splitParts?: { h1: number; rest: number }) => {
   const normal = makeLayout('정방향', fillGrid(0, 0, sheetW, sheetH, pieceW, pieceH, false), sheetW, sheetH);
   const rotated = makeLayout('90° 회전', fillGrid(0, 0, sheetW, sheetH, pieceH, pieceW, true), sheetW, sheetH);
 
@@ -189,8 +183,8 @@ export const findLayouts = (sheetW: number, sheetH: number, pieceW: number, piec
   // 수량이 같으면 정방향 → 회전 순으로 단순한 배치를 추천합니다.
   let best = candidates.reduce((a, b) => (b.count > a.count ? b : a));
 
-  if (h1 !== undefined) {
-    const splitPieces = findSplitLayout(sheetW, sheetH, pieceW, pieceH, h1);
+  if (splitParts) {
+    const splitPieces = findSplitLayout(sheetW, sheetH, pieceW, splitParts.h1, splitParts.rest);
     // 박스 1개 = H1 조각 1개 + H나머지 조각 1개
     if (splitPieces && splitPieces.length / 2 > best.count) {
       const split = makeLayout('2분할', splitPieces, sheetW, sheetH);
@@ -200,4 +194,26 @@ export const findLayouts = (sheetW: number, sheetH: number, pieceW: number, piec
     }
   }
   return { candidates, best };
+};
+
+/**
+ * @description 원장(sheetW x sheetH)에서 전개도(pieceW x pieceH)를 최대한 많이 뽑는 배치를 찾습니다.
+ * 정방향 / 90° 회전 / 두 방향을 한 번의 직선 재단으로 나눠 섞는 혼합 배치를 비교합니다.
+ * h1을 주면 전개도를 (가로 x H1)과 (가로 x H나머지) 2개로 나눠 재단하는 배치도 비교하고,
+ * 통째로 재단할 때보다 박스가 더 많이 나올 때만 추천합니다.
+ *
+ * 톱날 두께(kerf)는 조각과 조각 사이에만 들어갑니다. n개를 한 줄로 자르면 n x 조각 + (n-1) x 톱날 <= 원장이므로,
+ * 조각과 원장을 모두 톱날 두께만큼 키워 배치한 뒤 조각만 원래 크기로 되돌리면 정확한 배치가 됩니다.
+ */
+export const findLayouts = (sheetW: number, sheetH: number, pieceW: number, pieceH: number, h1?: number, kerf = 0) => {
+  const k = Math.max(0, kerf);
+  const splitParts = h1 === undefined ? undefined : { h1: h1 + k, rest: pieceH - h1 + k };
+  const raw = findRawLayouts(sheetW + k, sheetH + k, pieceW + k, pieceH + k, splitParts);
+  const shrink = (layout: CuttingLayout): CuttingLayout => {
+    const pieces = layout.pieces.map(p => ({ ...p, w: p.w - k, h: p.h - k }));
+    const used = pieces.reduce((sum, p) => sum + p.w * p.h, 0);
+    return { ...layout, pieces, usage: used / (sheetW * sheetH) };
+  };
+  const candidates = raw.candidates.map(shrink);
+  return { candidates, best: candidates[raw.candidates.indexOf(raw.best)] };
 };

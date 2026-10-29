@@ -91,8 +91,8 @@ const SheetSvg: React.FC<SheetSvgProps> = ({ layout, sheet, detailed = false }) 
 const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
   const { totalX, totalY, hPrime } = calc;
   const { candidates, best } = useMemo(
-    () => findLayouts(sheet.width, sheet.height, totalX, totalY, hPrime),
-    [sheet.width, sheet.height, totalX, totalY, hPrime]
+    () => findLayouts(sheet.width, sheet.height, totalX, totalY, hPrime, sheet.kerf),
+    [sheet.width, sheet.height, totalX, totalY, hPrime, sheet.kerf]
   );
   const isSplit = best.label === '2분할';
   const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-2 sm:grid-cols-4'][candidates.length - 1];
@@ -104,7 +104,7 @@ const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
         원장 재단 배치도
       </h3>
       <p className="text-sm text-gray-500 mb-6">
-        원장 {sheet.width} × {sheet.height}mm (두께 {sheet.thickness}mm)에서 전개도 {totalX} × {totalY}mm를 뽑는 배치입니다.
+        원장 {sheet.width} × {sheet.height}mm (두께 {sheet.thickness}mm, 톱날 {sheet.kerf}mm)에서 전개도 {totalX} × {totalY}mm를 뽑는 배치입니다.
       </p>
 
       {best.count === 0 ? (
@@ -161,7 +161,7 @@ const SheetLayout: React.FC<SheetLayoutProps> = ({ calc, sheet }) => {
               </p>
             )}
             <p className="text-blue-600 text-[11px] mt-1 leading-relaxed">
-              파란색은 정방향, 보라색(↻)은 90° 돌려 놓은 전개도, 초록색은 H1 조각, 주황색은 H나머지 조각이고, 빗금은 남는 부분입니다. 칼날 두께 등 재단 여유는 포함되지 않았습니다.
+              파란색은 정방향, 보라색(↻)은 90° 돌려 놓은 전개도, 초록색은 H1 조각, 주황색은 H나머지 조각이고, 빗금은 남는 부분입니다. 조각과 조각 사이에는 톱날 두께 {sheet.kerf}mm만큼 재단 손실을 두었습니다.
             </p>
           </div>
         </div>

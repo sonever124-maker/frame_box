@@ -7,7 +7,7 @@ import BoxIllustration from './components/BoxIllustration';
 import SheetLayout from './components/SheetLayout';
 
 // 박스 원장 기본값 (mm)
-const DEFAULT_SHEET: SheetDimensions = { thickness: 2, width: 1250, height: 1600 };
+const DEFAULT_SHEET: SheetDimensions = { thickness: 2, width: 1250, height: 1600, kerf: 2 };
 
 /**
  * @description Gemini API나 외부 서버 통신 없이 
@@ -24,6 +24,11 @@ const App: React.FC = () => {
 
   const updateDim = (key: keyof BoxDimensions, value: number) => {
     setDims(prev => ({ ...prev, [key]: value }));
+  };
+
+  // 가로·세로 값을 서로 바꿉니다. 계산은 dims 변경으로 자동 갱신됩니다.
+  const swapWidthHeight = () => {
+    setDims(prev => ({ ...prev, width: prev.height, height: prev.width }));
   };
 
   const updateSheet = (key: keyof SheetDimensions, value: number) => {
@@ -75,7 +80,7 @@ const App: React.FC = () => {
             <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
             기본 치수 입력 (mm)
           </h2>
-          <div className="grid grid-cols-3 gap-4 sm:gap-8">
+          <div className="grid grid-cols-[1fr_1fr_auto_1fr] items-end gap-2 sm:gap-4">
             <InputGroup 
               label="두께 (T)" 
               value={dims.thickness} 
@@ -86,6 +91,17 @@ const App: React.FC = () => {
               value={dims.width} 
               onChange={(val) => updateDim('width', val)} 
             />
+            <button
+              type="button"
+              onClick={swapWidthHeight}
+              title="가로·세로 바꾸기"
+              aria-label="가로와 세로 값 바꾸기"
+              className="h-[42px] px-2 sm:px-3 rounded-lg border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50 active:scale-95 transition-all"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+            </button>
             <InputGroup 
               label="세로 (H)" 
               value={dims.height} 
@@ -99,7 +115,7 @@ const App: React.FC = () => {
             <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
             박스 원장 (mm)
           </h2>
-          <div className="grid grid-cols-3 gap-4 sm:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8">
             <InputGroup 
               label="원장 두께" 
               value={sheet.thickness} 
@@ -114,6 +130,11 @@ const App: React.FC = () => {
               label="원장 세로" 
               value={sheet.height} 
               onChange={(val) => updateSheet('height', val)} 
+            />
+            <InputGroup 
+              label="톱날 두께" 
+              value={sheet.kerf} 
+              onChange={(val) => updateSheet('kerf', val)} 
             />
           </div>
         </section>
